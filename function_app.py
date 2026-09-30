@@ -1,6 +1,6 @@
 import logging
 import azure.functions as func
-import time
+import requests
 
 app = func.FunctionApp()
 
@@ -10,15 +10,15 @@ app = func.FunctionApp()
     arg_name="timer",
     run_on_startup=False
 )
-def web_monitor(timer: func.TimerRequest):
+def web_monitor(timer: func.TimerRequest) -> None:
 
-    logging.info("Timer working")
+    logging.info("Starting test")
 
-    start = time.time()
-
-    latency = round(
-        (time.time() - start) * 1000,
-        2
+    response = requests.get(
+        "https://www.microsoft.com",
+        timeout=10
     )
 
-    logging.info(f"Latency={latency}")
+    logging.info(
+        f"Status={response.status_code}"
+    )
