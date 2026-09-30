@@ -1,5 +1,6 @@
 import logging
 import azure.functions as func
+import urllib.request
 
 app = func.FunctionApp()
 
@@ -11,12 +12,16 @@ app = func.FunctionApp()
 )
 def web_monitor(timer: func.TimerRequest) -> None:
 
-    logging.info("Function started")
-
     try:
-        x = 1 + 1
 
-        logging.info(f"Result={x}")
+        response = urllib.request.urlopen(
+            "https://www.microsoft.com",
+            timeout=10
+        )
+
+        logging.info(
+            f"Status={response.status}"
+        )
 
     except Exception as ex:
 
