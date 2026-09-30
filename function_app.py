@@ -12,13 +12,22 @@ app = func.FunctionApp()
 )
 def web_monitor(timer: func.TimerRequest) -> None:
 
-    logging.info("Starting test")
+    logging.info("Function started")
 
-    response = requests.get(
-        "https://www.microsoft.com",
-        timeout=10
-    )
+    try:
+        logging.info("Before HTTP call")
 
-    logging.info(
-        f"Status={response.status_code}"
-    )
+        response = requests.get(
+            "https://www.microsoft.com",
+            timeout=10
+        )
+
+        logging.info(
+            f"Status={response.status_code}"
+        )
+
+    except Exception as ex:
+
+        logging.error(
+            f"Exception: {str(ex)}"
+        )
