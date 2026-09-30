@@ -1,6 +1,5 @@
 import logging
 import azure.functions as func
-import requests
 
 app = func.FunctionApp()
 
@@ -15,16 +14,9 @@ def web_monitor(timer: func.TimerRequest) -> None:
     logging.info("Function started")
 
     try:
-        logging.info("Before HTTP call")
+        x = 1 + 1
 
-        response = requests.get(
-            "https://www.microsoft.com",
-            timeout=10
-        )
-
-        logging.info(
-            f"Status={response.status_code}"
-        )
+        logging.info(f"Result={x}")
 
     except Exception as ex:
 
