@@ -39,22 +39,32 @@ def web_monitor(timer: func.TimerRequest):
                 2
             )
 
-            hostname = url.replace("https://", "")
+            host = url.replace("https://", "")
 
-            cert = ssl.get_server_certificate(
-                (hostname, 443)
+            context = ssl.create_default_context()
+
+            with socket.create_connection((host, 443)) as sock:
+                with context.wrap_socket(
+                    sock,
+                    server_hostname=host
+                ) as ssock:
+
+                    cert = ssock.getpeercert()
+
+            expiry_date = datetime.strptime(
+                cert["notAfter"],
+                "%b %d %H:%M:%S %Y %Z"
             )
 
-            x509 = ssl.PEM_cert_to_DER_cert(cert)
-
-            ssl_info = ssl._ssl._test_decode_cert(
-                ssl.get_default_verify_paths().cafile
-            )
+            days_remaining = (
+                expiry_date - datetime.utcnow()
+            ).days
 
             logging.info(
                 f"Website={url} "
                 f"Status={response.status} "
-                f"LatencyMs={latency}"
+                f"LatencyMs={latency} "
+                f"SSLDaysRemaining={days_remaining}"
             )
 
         except Exception as ex:
