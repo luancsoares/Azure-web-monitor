@@ -13,17 +13,20 @@ URLS = [
     "https://www.microsoft.com",
     "https://github.com",
     "https://portal.azure.com"
+    "https://www.bankinter.pt"
 ]
 
 @app.function_name(name="WebMonitorTimer")
 @app.timer_trigger(
-    schedule="* */5 * * * *",
+    schedule="0 */5 * * * *",
     arg_name="timer",
     run_on_startup=False
 )
 def web_monitor(timer: func.TimerRequest):
 
     for url in URLS:
+
+        availability = "UP"
 
         try:
 
@@ -39,7 +42,8 @@ def web_monitor(timer: func.TimerRequest):
                 2
             )
 
-            # Performance rating
+            # Performance Classification
+
             if latency < 200:
                 performance = "GOOD"
             elif latency < 500:
@@ -47,8 +51,12 @@ def web_monitor(timer: func.TimerRequest):
             else:
                 performance = "CRITICAL"
 
-            # SSL validation
-            hostname = url.replace("https://", "")
+            # SSL Validation
+
+            hostname = url.replace(
+                "https://",
+                ""
+            )
 
             context = ssl.create_default_context()
 
@@ -82,31 +90,43 @@ def web_monitor(timer: func.TimerRequest):
                 ssl_status = "CRITICAL"
 
             logging.info(
-                f"Website={url} "
-                f"Status={response.status} "
-                f"LatencyMs={latency} "
-                f"Performance={performance} "
-                f"SSLDaysRemaining={days_remaining} "
+                "WEB_MONITOR_RESULT | "
+                f"Timestamp={datetime.utcnow().isoformat()}Z | "
+                f"Website={url} | "
+                f"Availability={availability} | "
+                f"Status={response.status} | "
+                f"LatencyMs={latency} | "
+                f"Performance={performance} | "
+                f"SSLDaysRemaining={days_remaining} | "
                 f"SSLStatus={ssl_status}"
             )
 
             if latency > 1000:
 
                 logging.warning(
-                    f"Website={url} "
-                    f"HighLatency={latency}"
+                    "WEB_MONITOR_ALERT | "
+                    f"Website={url} | "
+                    f"AlertType=HIGH_LATENCY | "
+                    f"LatencyMs={latency}"
                 )
 
             if days_remaining < 30:
 
                 logging.warning(
-                    f"Website={url} "
-                    f"SSL expires in {days_remaining} days"
+                    "WEB_MONITOR_ALERT | "
+                    f"Website={url} | "
+                    f"AlertType=SSL_EXPIRING | "
+                    f"SSLDaysRemaining={days_remaining}"
                 )
 
         except Exception as ex:
 
+            availability = "DOWN"
+
             logging.error(
-                f"Website={url} "
+                "WEB_MONITOR_ERROR | "
+                f"Timestamp={datetime.utcnow().isoformat()}Z | "
+                f"Website={url} | "
+                f"Availability={availability} | "
                 f"Error={str(ex)}"
             )
