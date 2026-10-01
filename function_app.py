@@ -5,6 +5,12 @@ import azure.functions as func
 
 app = func.FunctionApp()
 
+URLS = [
+    "https://www.microsoft.com",
+    "https://github.com",
+    "https://portal.azure.com"
+]
+
 @app.function_name(name="WebMonitorTimer")
 @app.timer_trigger(
     schedule="0 */5 * * * *",
@@ -13,30 +19,31 @@ app = func.FunctionApp()
 )
 def web_monitor(timer: func.TimerRequest):
 
-    url = "https://www.microsoft.com"
+    for url in URLS:
 
-    try:
+        try:
 
-        start = time.time()
+            start = time.time()
 
-        response = urllib.request.urlopen(
-            url,
-            timeout=10
-        )
+            response = urllib.request.urlopen(
+                url,
+                timeout=10
+            )
 
-        latency = round(
-            (time.time() - start) * 1000,
-            2
-        )
+            latency = round(
+                (time.time() - start) * 1000,
+                2
+            )
 
-        logging.info(
-            f"Website={url} "
-            f"Status={response.status} "
-            f"LatencyMs={latency}"
-        )
+            logging.info(
+                f"Website={url} "
+                f"Status={response.status} "
+                f"LatencyMs={latency}"
+            )
 
-    except Exception as ex:
+        except Exception as ex:
 
-        logging.error(
-            f"Error={str(ex)}"
-        )
+            logging.error(
+                f"Website={url} "
+                f"Error={str(ex)}"
+            )
