@@ -17,7 +17,7 @@ URLS = [
 
 @app.function_name(name="WebMonitorTimer")
 @app.timer_trigger(
-    schedule="*/30 * * * * *",
+    schedule="* */5 * * * *",
     arg_name="timer",
     run_on_startup=False
 )
