@@ -3,8 +3,8 @@ import urllib.request
 import time
 import ssl
 import socket
-from datetime import datetime
 
+from datetime import datetime
 import azure.functions as func
 
 app = func.FunctionApp()
@@ -39,14 +39,27 @@ def web_monitor(timer: func.TimerRequest):
                 2
             )
 
-            host = url.replace("https://", "")
+            # Performance rating
+            if latency < 200:
+                performance = "GOOD"
+            elif latency < 500:
+                performance = "WARNING"
+            else:
+                performance = "CRITICAL"
+
+            # SSL validation
+            hostname = url.replace("https://", "")
 
             context = ssl.create_default_context()
 
-            with socket.create_connection((host, 443)) as sock:
+            with socket.create_connection(
+                (hostname, 443),
+                timeout=10
+            ) as sock:
+
                 with context.wrap_socket(
                     sock,
-                    server_hostname=host
+                    server_hostname=hostname
                 ) as ssock:
 
                     cert = ssock.getpeercert()
@@ -60,12 +73,36 @@ def web_monitor(timer: func.TimerRequest):
                 expiry_date - datetime.utcnow()
             ).days
 
+            ssl_status = "VALID"
+
+            if days_remaining < 30:
+                ssl_status = "EXPIRING_SOON"
+
+            if days_remaining < 7:
+                ssl_status = "CRITICAL"
+
             logging.info(
                 f"Website={url} "
                 f"Status={response.status} "
                 f"LatencyMs={latency} "
-                f"SSLDaysRemaining={days_remaining}"
+                f"Performance={performance} "
+                f"SSLDaysRemaining={days_remaining} "
+                f"SSLStatus={ssl_status}"
             )
+
+            if latency > 1000:
+
+                logging.warning(
+                    f"Website={url} "
+                    f"HighLatency={latency}"
+                )
+
+            if days_remaining < 30:
+
+                logging.warning(
+                    f"Website={url} "
+                    f"SSL expires in {days_remaining} days"
+                )
 
         except Exception as ex:
 
